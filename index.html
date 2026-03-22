@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain Sudoku</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+    <header>
+        <h1>Chain Sudoku</h1>
+        <p class="subtitle">Fill every row, column &amp; chain with each number exactly once.</p>
+        <p class="hint">Select a circle, then type a number &mdash; use Backspace to clear, arrow keys to move.</p>
+        <div id="controls">
+            <label for="diff-select">Difficulty:</label>
+            <select id="diff-select">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <label for="size-select">Grid:</label>
+            <select id="size-select">
+                <option value="4" selected>4 &times; 4</option>
+                <option value="5">5 &times; 5</option>
+                <option value="6">6 &times; 6</option>
+                <option value="7">7 &times; 7</option>
+            </select>
+            <button id="new-puzzle-btn">New Puzzle</button>
+            <button id="help-btn" title="How to play">&#x2753; How to Play</button>
+        </div>
+    </header>
+
+    <div id="print-row">
+        <button id="print-btn" title="Print puzzle and answer key">&#x1F5A8; Print Puzzle</button>
+    </div>
+
+    <div id="game-area">
+        <div id="board-wrapper">
+            <svg id="board" role="img" aria-label="Chain Sudoku board"></svg>
+        </div>
+            <div id="action-row">
+            <button id="notes-btn" title="Toggle notes mode (N)">&#x270F; Notes</button>
+            <button id="undo-btn" title="Undo last move (Ctrl+Z)">&#x21B6; Undo</button>
+            <button id="clear-btn" title="Clear selected cell (Backspace)">&#x232B; Clear</button>
+            <button id="check-btn" title="Highlight errors">&#x2713; Check</button>
+
+        </div>
+        <div id="action-row-2">
+            <button id="dark-mode-btn" title="Toggle dark mode">&#x1F319; Dark Mode</button>
+            <button id="color-chains-btn" title="Toggle chain colors">&#x1F3A8; Color Chains</button>
+        </div>
+        <p id="status-msg" aria-live="polite"></p>
+    </div>
+
+    <!-- Win overlay -->
+    <div id="win-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Puzzle solved">
+        <div class="overlay-box">
+            <div class="overlay-icon">&#x1F389;</div>
+            <h2>Puzzle Solved!</h2>
+            <p>Excellent work!</p>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Generating overlay -->
+    <div id="gen-overlay" class="overlay hidden" role="status" aria-label="Generating puzzle">
+        <div class="overlay-box">
+            <div class="spinner"></div>
+            <p>Generating puzzle&hellip;</p>
+        </div>
+    </div>
+    <!-- Rules overlay -->
+    <div id="rules-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="How to play">
+        <div class="overlay-box rules-box">
+            <h2>&#x1F4D6; How to Play</h2>
+
+            <div class="rules-section">
+                <h3>The Goal</h3>
+                <p>Fill in each circle so that each <strong>row</strong>, <strong>column</strong>, and <strong>chain</strong> contains each number exactly once. For example, in a 4&times;4 puzzle each row, column, and chain will contain the numbers 1&ndash;4 exactly once.</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>What is a Chain?</h3>
+                <p>Chains are groups of circles connected by lines. Each chain snakes across the board and must also contain each number exactly once &mdash; just like rows and columns.</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>Given Numbers</h3>
+                <p>The <strong>yellow circles</strong> are clues given to you at the start. They cannot be changed.</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>Controls</h3>
+                <table class="rules-table">
+                    <tr><td>Click a circle</td><td>Select it</td></tr>
+                    <tr><td>Type a number</td><td>Fill in the circle</td></tr>
+                    <tr><td>Backspace / Delete</td><td>Clear a circle</td></tr>
+                    <tr><td>Arrow keys</td><td>Move between circles</td></tr>
+                    <tr><td>Escape</td><td>Deselect</td></tr>
+                    <tr><td>Ctrl+Z / Cmd+Z</td><td>Undo last move</td></tr>
+                    <tr><td>N key</td><td>Toggle notes mode on/off</td></tr>
+                </table>
+            </div>
+
+            <div class="rules-section">
+                <h3>Buttons</h3>
+                <table class="rules-table">
+                    <tr><td>&#x2713; Check</td><td>Highlight any conflicting numbers</td></tr>
+                    <tr><td>&#x232B; Clear</td><td>Clear the selected circle</td></tr>
+                    <tr><td>&#x270F; Notes</td><td>Toggle notes mode &mdash; type candidates in small text</td></tr>
+                    <tr><td>&#x21B6; Undo</td><td>Step back one move at a time</td></tr>
+                    <tr><td>&#x1F319; Dark Mode</td><td>Toggle dark background theme</td></tr>
+                    <tr><td>&#x1F3A8; Color Chains</td><td>Toggle unique colors per chain</td></tr>
+                </table>
+            </div>
+
+            <button id="close-rules-btn">Got it!</button>
+        </div>
+    </div>
+
+</div>
+
+<script src="generator.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

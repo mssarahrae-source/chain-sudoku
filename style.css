@@ -1,0 +1,581 @@
+/* ── Reset & base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f0ece4;
+  color: #222;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 12px 48px;
+}
+
+/* ── App shell ─────────────────────────────────────────────────────────── */
+#app {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+header {
+  text-align: center;
+  width: 100%;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #1a1a1a;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 4px 0 4px;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: #999;
+  margin: 0 0 14px;
+  font-style: italic;
+}
+
+#controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#controls label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+#size-select {
+  padding: 6px 10px;
+  border: 2px solid #bbb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+#size-select:focus { border-color: #4a7fc1; }
+
+button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+button:active { transform: scale(0.96); }
+
+#new-puzzle-btn {
+  background: #4a7fc1;
+  color: #fff;
+}
+#new-puzzle-btn:hover { background: #3a6aa8; }
+
+#color-chains-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#color-chains-btn:hover { background: #ddd; }
+#color-chains-btn.active {
+  background: #4a7fc1;
+  color: #fff;
+  border-color: #3a6aa8;
+}
+#color-chains-btn.active:hover { background: #3a6aa8; }
+
+#dark-mode-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#dark-mode-btn:hover { background: #ddd; }
+#dark-mode-btn.active {
+  background: #4a7fc1;
+  color: #fff;
+  border-color: #3a6aa8;
+}
+#dark-mode-btn.active:hover { background: #3a6aa8; }
+
+#help-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#help-btn:hover { background: #ddd; }
+
+/* ── Game area ────────────────────────────────────────────────────────── */
+#game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+/* ── Board ────────────────────────────────────────────────────────────── */
+#board-wrapper {
+  background: #fff;
+  border: 2px solid #ccc;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#board {
+  display: block;
+  max-width: 100%;   /* scale down on very small screens */
+  height: auto;
+  overflow: visible;
+}
+
+/* ── SVG cell elements (styled via JS setAttribute but also here) ─────── */
+.chain-line {
+  stroke: #222;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.cell-circle {
+  fill: #fff;
+  stroke: #222;
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: fill 0.12s;
+}
+
+.cell-circle.given {
+  fill: #FFE600;   /* true yellow for clue cells */
+  cursor: default;
+}
+
+.cell-circle.selected {
+  fill: #d0e8ff;
+  stroke: #4a7fc1;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px rgba(74,127,193,0.7));
+}
+
+.cell-circle.error {
+  fill: #ffd6d6;
+  stroke: #d63030;
+}
+
+.cell-circle.given.error {
+  fill: #FFE600;  /* given cells keep their colour even when flagged */
+}
+
+.cell-circle.win-flash {
+  fill: #a8f0b0;
+  transition: fill 0.15s ease;
+}
+
+.cell-circle.blink {
+  fill: #ff6b35 !important;
+  filter: drop-shadow(0 0 5px rgba(255,107,53,0.8)) !important;
+  transition: fill 0.12s ease;
+}
+
+body.dark-mode .cell-circle.blink {
+  fill: #cc3300 !important;
+  filter: drop-shadow(0 0 5px rgba(204,51,0,0.8)) !important;
+}
+
+.cell-text {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  dominant-baseline: central;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+.note-text {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 600;
+  dominant-baseline: central;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+  fill: #4a7fc1;
+}
+
+/* ── Numpad ───────────────────────────────────────────────────────────── */
+#numpad {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.num-btn {
+  width: 52px;
+  height: 52px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: #fff;
+  border: 2px solid #bbb;
+  border-radius: 10px;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.num-btn:hover { background: #e8f0fb; border-color: #4a7fc1; }
+.num-btn:active { background: #d0e2f7; }
+
+/* ── Action row ───────────────────────────────────────────────────────── */
+#action-row {
+  display: flex;
+  gap: 12px;
+}
+
+#action-row-2 {
+  display: flex;
+  gap: 12px;
+}
+
+#undo-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#undo-btn:hover { background: #ddd; }
+
+#notes-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#notes-btn:hover { background: #ddd; }
+#notes-btn.active {
+  background: #5c9e6e;
+  color: #fff;
+  border-color: #4a8a5c;
+}
+#notes-btn.active:hover { background: #4a8a5c; }
+
+#clear-btn {
+  background: #eee;
+  color: #333;
+  border: 2px solid #bbb;
+}
+#clear-btn:hover { background: #ddd; }
+
+#print-row {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 0 0;
+}
+
+#print-btn,
+#check-btn {
+  background: #5cb85c;
+  color: #fff;
+  border: none;
+}
+#print-btn:hover,
+#check-btn:hover { background: #4cae4c; }
+
+body.dark-mode #print-btn,
+body.dark-mode #check-btn {
+  background: #2a6e2a;
+}
+body.dark-mode #print-btn:hover,
+body.dark-mode #check-btn:hover { background: #3a7e3a; }
+
+/* ── Status message ───────────────────────────────────────────────────── */
+#status-msg {
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  color: #c0392b;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Overlays ─────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.overlay.hidden { display: none; }
+
+.overlay-box {
+  background: #fff;
+  border-radius: 18px;
+  padding: 36px 48px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.overlay-icon { font-size: 3.5rem; }
+
+.overlay-box h2 {
+  font-size: 1.8rem;
+  color: #2c7a2c;
+}
+
+.overlay-box p { color: #555; }
+
+#play-again-btn {
+  background: #4a7fc1;
+  color: #fff;
+  font-size: 1rem;
+  padding: 10px 28px;
+  margin-top: 6px;
+}
+#play-again-btn:hover { background: #3a6aa8; }
+
+/* ── Rules modal ─────────────────────────────────────────────────────────── */
+.rules-box {
+  max-width: 480px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left;
+  padding: 28px 32px;
+  gap: 0;
+}
+
+.rules-box h2 {
+  font-size: 1.4rem;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.rules-section {
+  margin-bottom: 16px;
+}
+
+.rules-section h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4a7fc1;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rules-section p {
+  font-size: 0.88rem;
+  color: #444;
+  line-height: 1.55;
+}
+
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.rules-table td {
+  padding: 4px 8px;
+  color: #444;
+  vertical-align: top;
+}
+
+.rules-table td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+  color: #222;
+  width: 50%;
+}
+
+.rules-table tr:nth-child(even) td {
+  background: #f7f7f7;
+}
+
+#close-rules-btn {
+  background: #4a7fc1;
+  color: #fff;
+  font-size: 1rem;
+  padding: 10px 28px;
+  margin: 12px auto 0;
+  display: block;
+}
+#close-rules-btn:hover { background: #3a6aa8; }
+
+/* ── Spinner ──────────────────────────────────────────────────────────── */
+.spinner {
+  width: 44px; height: 44px;
+  border: 5px solid #ddd;
+  border-top-color: #4a7fc1;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive tweaks ────────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  h1 { font-size: 1.5rem; }
+  #board-wrapper { padding: 8px; }
+  .num-btn { width: 44px; height: 44px; font-size: 1.2rem; }
+}
+
+/* ── Dark mode ────────────────────────────────────────────────────────────── */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #e8e8e8;
+}
+
+body.dark-mode h1 { color: #f0f0f0; }
+body.dark-mode .subtitle,
+body.dark-mode .hint { color: #888; }
+
+body.dark-mode #board-wrapper {
+  background: #2a2a2a;
+  border-color: #444;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+}
+
+/* SVG board elements */
+body.dark-mode .cell-circle {
+  fill: #2a2a2a;
+  stroke: #ccc;
+}
+body.dark-mode .cell-circle.given {
+  fill: #DED790;  /* pale desaturated yellow */
+}
+body.dark-mode .cell-circle.selected {
+  fill: #1a3a5a;
+  stroke: #6aa8f0;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 5px rgba(106,168,240,0.8));
+}
+body.dark-mode .cell-circle.error {
+  fill: #5a1a1a;
+  stroke: #e06060;
+}
+body.dark-mode .cell-circle.given.error {
+  fill: #DED790;
+}
+body.dark-mode .cell-circle.win-flash {
+  fill: #1a6b2a;
+}
+body.dark-mode .chain-line {
+  stroke: #ccc;
+}
+body.dark-mode .cell-text {
+  fill: #f0f0f0;
+}
+
+/* Black outline on given-cell numbers so they read on pale yellow */
+body.dark-mode .given-text {
+  fill: #f0f0f0;
+  stroke: #222;
+  stroke-width: 2.5;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+body.dark-mode .note-text {
+  fill: #6aa8f0;
+}
+
+/* Controls & buttons */
+body.dark-mode #size-select,
+body.dark-mode #diff-select {
+  background: #333;
+  color: #e8e8e8;
+  border-color: #555;
+}
+body.dark-mode #controls label { color: #ccc; }
+
+body.dark-mode #new-puzzle-btn {
+  background: #2a5a9a;
+}
+body.dark-mode #new-puzzle-btn:hover { background: #3a6aaa; }
+
+body.dark-mode #help-btn,
+body.dark-mode #notes-btn,
+body.dark-mode #undo-btn,
+body.dark-mode #clear-btn {
+  background: #333;
+  color: #e8e8e8;
+  border-color: #555;
+}
+body.dark-mode #help-btn:hover,
+body.dark-mode #notes-btn:hover,
+body.dark-mode #undo-btn:hover,
+body.dark-mode #clear-btn:hover { background: #444; }
+
+body.dark-mode #notes-btn.active {
+  background: #2a6e3e;
+  border-color: #3a8e4e;
+}
+body.dark-mode body.dark-mode body.dark-mode body.dark-mode body.dark-mode #dark-mode-btn {
+  background: #4a7fc1;
+  color: #fff;
+  border-color: #3a6aa8;
+}
+body.dark-mode #dark-mode-btn:hover { background: #3a6aa8; }
+
+body.dark-mode #color-chains-btn {
+  background: #333;
+  color: #e8e8e8;
+  border-color: #555;
+}
+body.dark-mode #color-chains-btn:hover { background: #444; }
+body.dark-mode #color-chains-btn.active {
+  background: #2a5a9a;
+  color: #fff;
+  border-color: #3a6aaa;
+}
+
+/* Status message */
+body.dark-mode #status-msg { color: #e06060; }
+
+/* Overlays */
+body.dark-mode .overlay { background: rgba(0,0,0,0.65); }
+body.dark-mode .overlay-box {
+  background: #2a2a2a;
+  color: #e8e8e8;
+}
+body.dark-mode .overlay-box h2 { color: #5ae07a; }
+body.dark-mode .overlay-box p { color: #bbb; }
+body.dark-mode #play-again-btn {
+  background: #2a5a9a;
+}
+body.dark-mode #play-again-btn:hover { background: #3a6aaa; }
+
+/* Rules modal */
+body.dark-mode .rules-box h2 { color: #f0f0f0; }
+body.dark-mode .rules-section h3 { color: #6aa8f0; }
+body.dark-mode .rules-section p,
+body.dark-mode .rules-table td { color: #ccc; }
+body.dark-mode .rules-table td:first-child { color: #e8e8e8; }
+body.dark-mode .rules-table tr:nth-child(even) td { background: #333; }
+body.dark-mode #close-rules-btn {
+  background: #2a5a9a;
+}
+body.dark-mode #close-rules-btn:hover { background: #3a6aaa; }
