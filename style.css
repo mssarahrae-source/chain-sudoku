@@ -305,6 +305,38 @@ body.dark-mode #check-btn {
 body.dark-mode #print-btn:hover,
 body.dark-mode #check-btn:hover { background: #3a7e3a; }
 
+#numpad-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.num-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: #e8f0fb;
+  color: #2a4a8a;
+  border: 2px solid #a0b8e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.num-btn:hover { background: #d0e2f7; border-color: #4a7fc1; }
+.num-btn:active { background: #b8d0f0; transform: scale(0.93); }
+
+
+/* Dark mode numpad */
+body.dark-mode .num-btn {
+  background: #1e2d4a;
+  color: #a0c0f0;
+  border-color: #3a5a8a;
+}
+body.dark-mode .num-btn:hover { background: #2a3d5a; border-color: #6a9ad0; }
+
 /* ── Status message ───────────────────────────────────────────────────── */
 #status-msg {
   font-size: 0.9rem;

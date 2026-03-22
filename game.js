@@ -545,6 +545,19 @@ document.addEventListener('keydown', e => {
 /* ─── Start new puzzle ────────────────────────────────────────────── */
 let _activeWorker = null;  // track current generation worker
 
+
+function buildNumpad(N) {
+  const row = document.getElementById('numpad-row');
+  row.innerHTML = '';
+  for (let n = 1; n <= N; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = n;
+    btn.setAttribute('aria-label', 'Enter ' + n);
+    btn.addEventListener('click', () => { enterValue(n); });
+    row.appendChild(btn);
+  }
+}
 function applyPuzzle(N, puzzle) {
   Object.assign(STATE, {
     N,
@@ -561,6 +574,7 @@ function applyPuzzle(N, puzzle) {
   });
   document.getElementById('notes-btn').classList.remove('active');
   buildBoard();
+  buildNumpad(N);
 }
 
 function startNewPuzzle(N, difficulty) {

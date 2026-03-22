@@ -11,7 +11,7 @@
     <header>
         <h1>Chain Sudoku</h1>
         <p class="subtitle">Fill every row, column &amp; chain with each number exactly once.</p>
-        <p class="hint">Select a circle, then type a number &mdash; use Backspace to clear, arrow keys to move.</p>
+        <p class="hint">Select a circle, then type a number or click a number button &mdash; Backspace to clear, arrow keys to move.</p>
         <div id="controls">
             <label for="diff-select">Difficulty:</label>
             <select id="diff-select">
@@ -39,6 +39,7 @@
         <div id="board-wrapper">
             <svg id="board" role="img" aria-label="Chain Sudoku board"></svg>
         </div>
+        <div id="numpad-row"></div>
             <div id="action-row">
             <button id="notes-btn" title="Toggle notes mode (N)">&#x270F; Notes</button>
             <button id="undo-btn" title="Undo last move (Ctrl+Z)">&#x21B6; Undo</button>
@@ -94,7 +95,7 @@
                 <h3>Controls</h3>
                 <table class="rules-table">
                     <tr><td>Click a circle</td><td>Select it</td></tr>
-                    <tr><td>Type a number</td><td>Fill in the circle</td></tr>
+                    <tr><td>Type a number <em>or</em> click a number button</td><td>Fill in the circle</td></tr>
                     <tr><td>Backspace / Delete</td><td>Clear a circle</td></tr>
                     <tr><td>Arrow keys</td><td>Move between circles</td></tr>
                     <tr><td>Escape</td><td>Deselect</td></tr>
@@ -110,6 +111,7 @@
                     <tr><td>&#x232B; Clear</td><td>Clear the selected circle</td></tr>
                     <tr><td>&#x270F; Notes</td><td>Toggle notes mode &mdash; type candidates in small text</td></tr>
                     <tr><td>&#x21B6; Undo</td><td>Step back one move at a time</td></tr>
+                    <tr><td>1 &ndash; N buttons</td><td>Click to enter that number in the selected circle</td></tr>
                     <tr><td>&#x1F319; Dark Mode</td><td>Toggle dark background theme</td></tr>
                     <tr><td>&#x1F3A8; Color Chains</td><td>Toggle unique colors per chain</td></tr>
                 </table>
