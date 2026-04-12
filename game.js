@@ -31,7 +31,45 @@ const STATE = {
   notes:       null,   // Array<Set<number>>, one per cell
   darkMode:    false,  // dark background theme
   celebrationTimers: [],  // track win-animation timeouts
+  soundEnabled: true,
 };
+
+/* ─── Sound system ─────────────────────────────────────────────────────────── */
+const SOUNDS = (() => {
+  let _ctx = null;
+  function getCtx() {
+    if (!_ctx) {
+      try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return _ctx;
+  }
+  function beep(freq, dur, type, vol) {
+    if (!STATE.soundEnabled) return;
+    type = type || 'sine'; vol = vol || 0.3;
+    try {
+      const ac = getCtx(); if (!ac) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      o.start(ac.currentTime); o.stop(ac.currentTime + dur);
+    } catch(e) {}
+  }
+  return {
+    enter: ()  => beep(523, 0.12),
+    clear: ()  => beep(330, 0.10, 'sine', 0.15),
+    error: ()  => beep(180, 0.25, 'square', 0.18),
+    hint:  ()  => beep(440, 0.18, 'sine', 0.20),
+    undo:  ()  => beep(392, 0.10, 'sine', 0.15),
+    win:   ()  => {
+      beep(523, 0.10);
+      setTimeout(() => beep(659, 0.10), 130);
+      setTimeout(() => beep(784, 0.15), 280);
+      setTimeout(() => beep(1047, 0.40), 450);
+    },
+  };
+})();
 
 /* ─── DOM refs ───────────────────────────────────────────────────────────── */
 const $svg        = document.getElementById('board');
@@ -217,6 +255,10 @@ function enterValue(v) {
   const combined = STATE.userGrid.map((val, i) => val || STATE.givens[i]);
   if (v > 0 && findConflicts(combined).has(selected)) {
     blinkCell(selected);
+  } else if (v > 0) {
+    SOUNDS.enter();
+  } else {
+    SOUNDS.clear();
   }
 
   // Refresh error styling
@@ -229,6 +271,7 @@ function enterValue(v) {
 function clearCell() { enterValue(0); }
 
 function undoMove() {
+  SOUNDS.undo();
   if (!STATE.history.length) { $status.textContent = 'Nothing to undo.'; return; }
   const { idx, prev, prevNotes } = STATE.history.pop();
   STATE.userGrid[idx] = prev;
@@ -245,6 +288,7 @@ function undoMove() {
 
 /* ─── Blink a cell to signal an incorrect entry ──────────────────────── */
 function blinkCell(idx) {
+  SOUNDS.error();
   const circ = circleEl(idx);
   if (!circ) return;
   const BLINKS   = 4;    // number of on/off cycles
@@ -432,6 +476,7 @@ function printPuzzle() {
 
 /* ─── Win celebration: flash each row, column, chain in sequence ─────── */
 function celebrateWin() {
+  SOUNDS.win();
   const { N, chains } = STATE;
   const isDark = STATE.darkMode;
 
@@ -683,6 +728,126 @@ async function mainThreadGenerate(N, difficulty) {
   $status.style.color = '#c0392b';
 }
 
+
+/* ─── Hint system ──────────────────────────────────────────────────────────── */
+function giveHint() {
+  const { N, chains, givens, userGrid, cellChain } = STATE;
+  if (!givens) return;
+  const total = N * N;
+  const combined = userGrid.map((v, i) => v || givens[i]);
+
+  const peers = Array.from({ length: total }, (_, idx) => {
+    const r = Math.floor(idx / N), col = idx % N;
+    const s = new Set();
+    for (let cc = 0; cc < N; cc++) if (cc !== col) s.add(r * N + cc);
+    for (let rr = 0; rr < N; rr++) if (rr !== r)   s.add(rr * N + col);
+    for (const p of chains[cellChain[idx]]) if (p !== idx) s.add(p);
+    return [...s];
+  });
+
+  function usedMask(idx) {
+    let m = 0;
+    for (const p of peers[idx]) if (combined[p]) m |= (1 << combined[p]);
+    return m;
+  }
+
+  // Naked single: only one candidate
+  for (let i = 0; i < total; i++) {
+    if (combined[i]) continue;
+    const used = usedMask(i);
+    const cands = [];
+    for (let v = 1; v <= N; v++) if (!(used & (1 << v))) cands.push(v);
+    if (cands.length === 1) { flashHintCell(i, cands[0]); return; }
+  }
+
+  // Hidden single: only one cell in group can hold v
+  const groups = [
+    ...Array.from({length:N},(_,r)=>Array.from({length:N},(_,c)=>r*N+c)),
+    ...Array.from({length:N},(_,c)=>Array.from({length:N},(_,r)=>r*N+c)),
+    ...chains,
+  ];
+  for (const group of groups) {
+    for (let v = 1; v <= N; v++) {
+      const possible = group.filter(i => !combined[i] && !(usedMask(i) & (1 << v)));
+      if (possible.length === 1) { flashHintCell(possible[0], v); return; }
+    }
+  }
+
+  $status.textContent = 'No simple deduction found — try notes mode!';
+  $status.style.color = '#888';
+}
+
+function flashHintCell(idx, val) {
+  SOUNDS.hint();
+  selectCell(idx);
+  const circ = circleEl(idx);
+  const txt  = textEl(idx);
+  if (!circ) return;
+  circ.classList.add('hint-flash');
+  if (txt) { txt.textContent = val; txt.classList.add('hint-text'); }
+  $status.textContent = `Hint: this cell can only be ${val}.`;
+  $status.style.color = '#2c7a2c';
+  setTimeout(() => {
+    circ.classList.remove('hint-flash');
+    if (txt) {
+      txt.textContent = STATE.userGrid[idx] > 0 ? STATE.userGrid[idx] : '';
+      txt.classList.remove('hint-text');
+    }
+  }, 1800);
+}
+
+/* ─── Shareable puzzle codes ────────────────────────────────────────────────── */
+function encodePuzzle() {
+  const { N, chains, givens } = STATE;
+  if (!givens) return null;
+  try {
+    return btoa(unescape(encodeURIComponent(
+      JSON.stringify({ N, chains, givens: Array.from(givens) })
+    )));
+  } catch(e) { return null; }
+}
+
+function sharePuzzle() {
+  const code = encodePuzzle();
+  if (!code) { $status.textContent = 'No puzzle to share.'; return; }
+  const url = location.href.split('#')[0] + '#p=' + code;
+  function fallback() {
+    try {
+      const el = document.createElement('input');
+      el.value = url; document.body.appendChild(el);
+      el.select(); document.execCommand('copy');
+      document.body.removeChild(el);
+    } catch(e) {}
+    $status.textContent = 'Link copied to clipboard!';
+    $status.style.color = '#2c7a2c';
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      $status.textContent = 'Link copied to clipboard!';
+      $status.style.color = '#2c7a2c';
+    }).catch(fallback);
+  } else { fallback(); }
+}
+
+function loadFromHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#p=')) return false;
+  try {
+    const obj = JSON.parse(decodeURIComponent(escape(atob(hash.slice(3)))));
+    const { N, chains, givens } = obj;
+    if (!N || !chains || !givens) return false;
+    const res = solvePuzzle(N, chains, givens, 1, false, 60000);
+    if (!res.count) { console.warn('Shared puzzle has no solution'); return false; }
+    const cellChain = new Uint8Array(N * N);
+    for (let c = 0; c < N; c++) for (const idx of chains[c]) cellChain[idx] = c;
+    applyPuzzle(N, { chains, solution: res.solutions[0], givens, cellChain });
+    history.replaceState(null, '', location.href.split('#')[0]);
+    $status.textContent = 'Shared puzzle loaded!';
+    $status.style.color = '#2c7a2c';
+    return true;
+  } catch(e) { console.warn('Could not load shared puzzle:', e); return false; }
+}
+
 /* ─── Button wiring ──────────────────────────────────────────────────────── */
 document.getElementById('new-puzzle-btn').addEventListener('click', () =>
   startNewPuzzle(parseInt($sizeSelect.value, 10), $diffSelect.value));
@@ -732,7 +897,18 @@ document.getElementById('color-chains-btn').addEventListener('click', () => {
 
 document.getElementById('print-btn').addEventListener('click', printPuzzle);
 
+document.getElementById('hint-btn').addEventListener('click', giveHint);
+document.getElementById('share-btn').addEventListener('click', sharePuzzle);
+document.getElementById('sound-btn').addEventListener('click', () => {
+  STATE.soundEnabled = !STATE.soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.classList.toggle('active', STATE.soundEnabled);
+  btn.textContent = STATE.soundEnabled ? '🔊 Sound' : '🔇 Muted';
+});
+
+
+
 
 
 /* ─── Bootstrap ──────────────────────────────────────────────────────────── */
-startNewPuzzle(4, 'medium');
+if (!loadFromHash()) startNewPuzzle(4, 'medium');

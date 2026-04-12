@@ -195,6 +195,28 @@ body.dark-mode .cell-text.error {
   fill: #ff5050;
 }
 
+
+/* Hint flash */
+.cell-circle.hint-flash {
+  fill: #e8f5e9;
+  stroke: #2a6e2a;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px #4cae4c);
+}
+body.dark-mode .cell-circle.hint-flash {
+  fill: #1a3a1a;
+  stroke: #5cb85c;
+  filter: drop-shadow(0 0 6px #3a7e3a);
+}
+.cell-text.hint-text {
+  fill: #2a6e2a;
+  opacity: 0.5;
+  font-style: italic;
+}
+body.dark-mode .cell-text.hint-text {
+  fill: #7ec87e;
+  opacity: 0.55;
+}
 .cell-circle.win-flash {
   fill: #a8f0b0;
   transition: fill 0.15s ease;
@@ -515,7 +537,29 @@ body.dark-mode .cell-circle.error {
 body.dark-mode .cell-circle.given.error {
   fill: #DED790;
 }
-body.dark-mode .cell-circle.win-flash {
+body.dark-mode 
+/* Hint flash */
+.cell-circle.hint-flash {
+  fill: #e8f5e9;
+  stroke: #2a6e2a;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px #4cae4c);
+}
+body.dark-mode .cell-circle.hint-flash {
+  fill: #1a3a1a;
+  stroke: #5cb85c;
+  filter: drop-shadow(0 0 6px #3a7e3a);
+}
+.cell-text.hint-text {
+  fill: #2a6e2a;
+  opacity: 0.5;
+  font-style: italic;
+}
+body.dark-mode .cell-text.hint-text {
+  fill: #7ec87e;
+  opacity: 0.55;
+}
+.cell-circle.win-flash {
   fill: #1a6b2a;
 }
 body.dark-mode .chain-line {

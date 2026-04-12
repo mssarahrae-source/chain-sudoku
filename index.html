@@ -18,6 +18,7 @@
                 <option value="easy">Easy</option>
                 <option value="medium" selected>Medium</option>
                 <option value="hard">Hard</option>
+                <option value="challenging">Challenging</option>
             </select>
             <label for="size-select">Grid:</label>
             <select id="size-select">
@@ -44,11 +45,14 @@
             <button id="notes-btn" title="Toggle notes mode (N)">&#x270F; Notes</button>
             <button id="undo-btn" title="Undo last move (Ctrl+Z)">&#x21B6; Undo</button>
             <button id="clear-btn" title="Clear selected cell (Backspace)">&#x232B; Clear</button>
+            <button id="hint-btn" title="Highlight a cell where deduction is possible">&#x1F4A1; Hint</button>
 
         </div>
         <div id="action-row-2">
             <button id="dark-mode-btn" title="Toggle dark mode">&#x1F319; Dark Mode</button>
             <button id="color-chains-btn" title="Toggle chain colors">&#x1F3A8; Color Chains</button>
+            <button id="share-btn" title="Copy shareable puzzle link">&#x1F517; Share Puzzle</button>
+            <button id="sound-btn" class="active" title="Toggle sound effects">&#x1F50A; Sound</button>
         </div>
         <p id="status-msg" aria-live="polite"></p>
     </div>
@@ -83,6 +87,7 @@
             <div class="rules-section">
                 <h3>What is a Chain?</h3>
                 <p>Conflicts are highlighted automatically in red as you play &mdash; no need to check manually.</p>
+                <p><strong>Challenging</strong> difficulty leaves only the absolute minimum clues (~N given numbers). These puzzles may require advanced logic and are guaranteed to have a unique solution.</p>
                 <p>Chains are groups of circles connected by lines. Each chain snakes across the board and must also contain each number exactly once &mdash; just like rows and columns.</p>
             </div>
 
@@ -113,6 +118,9 @@
                     <tr><td>1 &ndash; N buttons</td><td>Click to enter that number in the selected circle</td></tr>
                     <tr><td>&#x1F319; Dark Mode</td><td>Toggle dark background theme</td></tr>
                     <tr><td>&#x1F3A8; Color Chains</td><td>Toggle unique colors per chain</td></tr>
+                    <tr><td>&#x1F4A1; Hint</td><td>Highlights a deducible cell and shows its value</td></tr>
+                    <tr><td>&#x1F517; Share Puzzle</td><td>Copy a link that loads this exact puzzle</td></tr>
+                    <tr><td>&#x1F50A; Sound</td><td>Toggle sound effects on/off</td></tr>
                 </table>
             </div>
 
