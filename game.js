@@ -195,6 +195,7 @@ function isConflicting(idx, v) {
 
 /* ─── Enter / clear value ────────────────────────────────────────────────── */
 function enterValue(v) {
+  resetHint();
   const { selected, givens } = STATE;
   if (selected === -1) { $status.textContent = 'Select a cell first.'; return; }
   if (givens[selected] !== 0) return;   // can't overwrite a clue
@@ -271,6 +272,7 @@ function enterValue(v) {
 function clearCell() { enterValue(0); }
 
 function undoMove() {
+  resetHint();
   SOUNDS.undo();
   if (!STATE.history.length) { $status.textContent = 'Nothing to undo.'; return; }
   const { idx, prev, prevNotes } = STATE.history.pop();
@@ -730,10 +732,46 @@ async function mainThreadGenerate(N, difficulty) {
 }
 
 
-/* ─── Hint system ──────────────────────────────────────────────────────────── */
+/* ─── Hint system (two-level) ────────────────────────────────────────────────────── */
+const HINT_STATE = { level: 0, cellIdx: -1, value: 0, explanation: '' };
+
+function resetHint() {
+  if (HINT_STATE.cellIdx >= 0) {
+    const circ = circleEl(HINT_STATE.cellIdx);
+    if (circ) circ.classList.remove('hint-highlight');
+    const txt = textEl(HINT_STATE.cellIdx);
+    if (txt) {
+      txt.textContent = STATE.userGrid[HINT_STATE.cellIdx] > 0 ? STATE.userGrid[HINT_STATE.cellIdx] : '';
+      txt.classList.remove('hint-text');
+    }
+  }
+  HINT_STATE.level = 0;
+  HINT_STATE.cellIdx = -1;
+  HINT_STATE.value = 0;
+  HINT_STATE.explanation = '';
+  const btn = document.getElementById('hint-btn');
+  if (btn) btn.textContent = '\uD83D\uDCA1 Hint';
+}
+
 function giveHint() {
   const { N, chains, givens, userGrid, cellChain } = STATE;
   if (!givens) return;
+
+  // Level 1 → 2: reveal full explanation for the already-highlighted cell
+  if (HINT_STATE.level === 1) {
+    $status.textContent = HINT_STATE.explanation;
+    $status.style.color = '#2c7a2c';
+    HINT_STATE.level = 2;
+    const btn = document.getElementById('hint-btn');
+    if (btn) btn.textContent = '\uD83D\uDCA1 Hint';
+    const txt = textEl(HINT_STATE.cellIdx);
+    if (txt) { txt.textContent = HINT_STATE.value; txt.classList.add('hint-text'); }
+    return;
+  }
+
+  // Level 2: reset then fall through to find a new hint
+  if (HINT_STATE.level === 2) resetHint();
+
   const total = N * N;
   const combined = userGrid.map((v, i) => v || givens[i]);
 
@@ -752,49 +790,59 @@ function giveHint() {
     return m;
   }
 
-  // Naked single: only one candidate
+  // Naked single: only one candidate remains
   for (let i = 0; i < total; i++) {
     if (combined[i]) continue;
     const used = usedMask(i);
     const cands = [];
     for (let v = 1; v <= N; v++) if (!(used & (1 << v))) cands.push(v);
-    if (cands.length === 1) { flashHintCell(i, cands[0]); return; }
-  }
-
-  // Hidden single: only one cell in group can hold v
-  const groups = [
-    ...Array.from({length:N},(_,r)=>Array.from({length:N},(_,c)=>r*N+c)),
-    ...Array.from({length:N},(_,c)=>Array.from({length:N},(_,r)=>r*N+c)),
-    ...chains,
-  ];
-  for (const group of groups) {
-    for (let v = 1; v <= N; v++) {
-      const possible = group.filter(i => !combined[i] && !(usedMask(i) & (1 << v)));
-      if (possible.length === 1) { flashHintCell(possible[0], v); return; }
+    if (cands.length === 1) {
+      const r = Math.floor(i / N) + 1, c = (i % N) + 1;
+      const usedVals = [];
+      for (let v = 1; v <= N; v++) if (used & (1 << v)) usedVals.push(v);
+      const expl = `\uD83D\uDCA1 Row ${r}, Col ${c} must be ${cands[0]} \u2014 all other values (${usedVals.join(', ')}) are already used in its row, column, or chain.`;
+      startHintLevel1(i, cands[0], `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Hint again for the full explanation.`, expl);
+      return;
     }
   }
 
-  $status.textContent = 'No simple deduction found — try notes mode!';
+  // Hidden single: only one cell in a group can hold value v
+  const groups = [
+    ...Array.from({length:N},(_,r)=>({cells:Array.from({length:N},(_,c)=>r*N+c), name:`Row ${r+1}`})),
+    ...Array.from({length:N},(_,c)=>({cells:Array.from({length:N},(_,r)=>r*N+c), name:`Column ${c+1}`})),
+    ...chains.map((ch,ci)=>({cells:ch, name:`Chain ${ci+1}`})),
+  ];
+  for (const {cells, name} of groups) {
+    for (let v = 1; v <= N; v++) {
+      const possible = cells.filter(i => !combined[i] && !(usedMask(i) & (1 << v)));
+      if (possible.length === 1) {
+        const i = possible[0];
+        const r = Math.floor(i / N) + 1, c = (i % N) + 1;
+        const expl = `\uD83D\uDCA1 Row ${r}, Col ${c} must be ${v} \u2014 it\'s the only cell in ${name} where ${v} can go.`;
+        startHintLevel1(i, v, `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Hint again for the full explanation.`, expl);
+        return;
+      }
+    }
+  }
+
+  $status.textContent = 'No simple deduction found \u2014 try notes mode!';
   $status.style.color = '#888';
 }
 
-function flashHintCell(idx, val) {
+function startHintLevel1(cellIdx, val, briefMsg, fullExplanation) {
+  resetHint();
   SOUNDS.hint();
-  selectCell(idx);
-  const circ = circleEl(idx);
-  const txt  = textEl(idx);
-  if (!circ) return;
-  circ.classList.add('hint-flash');
-  if (txt) { txt.textContent = val; txt.classList.add('hint-text'); }
-  $status.textContent = `Hint: this cell can only be ${val}.`;
+  HINT_STATE.level = 1;
+  HINT_STATE.cellIdx = cellIdx;
+  HINT_STATE.value = val;
+  HINT_STATE.explanation = fullExplanation;
+  selectCell(cellIdx);
+  const circ = circleEl(cellIdx);
+  if (circ) circ.classList.add('hint-highlight');
+  $status.textContent = briefMsg;
   $status.style.color = '#2c7a2c';
-  setTimeout(() => {
-    circ.classList.remove('hint-flash');
-    if (txt) {
-      txt.textContent = STATE.userGrid[idx] > 0 ? STATE.userGrid[idx] : '';
-      txt.classList.remove('hint-text');
-    }
-  }, 1800);
+  const btn = document.getElementById('hint-btn');
+  if (btn) btn.textContent = '\uD83D\uDCA1 Explain';
 }
 
 /* ─── Shareable puzzle codes ────────────────────────────────────────────────── */
@@ -850,11 +898,14 @@ function loadFromHash() {
 }
 
 /* ─── Button wiring ──────────────────────────────────────────────────────── */
-document.getElementById('new-puzzle-btn').addEventListener('click', () =>
-  startNewPuzzle(parseInt($sizeSelect.value, 10), $diffSelect.value));
+document.getElementById('new-puzzle-btn').addEventListener('click', () => {
+  resetHint();
+  startNewPuzzle(parseInt($sizeSelect.value, 10), $diffSelect.value);
+});
 
 document.getElementById('play-again-btn').addEventListener('click', () => {
   $winOverlay.classList.add('hidden');
+  resetHint();
   startNewPuzzle(STATE.N, $diffSelect.value);
 });
 

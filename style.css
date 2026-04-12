@@ -217,6 +217,18 @@ body.dark-mode .cell-text.hint-text {
   fill: #7ec87e;
   opacity: 0.55;
 }
+.cell-circle.hint-highlight {
+  fill: #e8f5e9;
+  stroke: #2a6e2a;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 8px #4cae4c);
+}
+body.dark-mode .cell-circle.hint-highlight {
+  fill: #1a3a1a;
+  stroke: #5cb85c;
+  filter: drop-shadow(0 0 8px #3a7e3a);
+}
+
 
 #hint-btn,
 #share-btn,
