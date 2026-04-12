@@ -25,7 +25,6 @@ const STATE = {
   cellChain:  null,
   userGrid:   null,   // flat array N², user-entered values (0 = empty)
   selected:   -1,     // cell index, -1 = none
-  checking:   false,  // error-highlight mode
   history:    [],     // [{idx, prev}] for undo
   colorChains: false,  // toggle chain colour mode
   notesMode:   false,  // pencil-in candidate numbers
@@ -192,6 +191,28 @@ function enterValue(v) {
   STATE.notes[selected].clear();
   renderNotes(selected);
 
+  // Auto-remove this number from notes in same row, column, and chain
+  if (v > 0) {
+    const N = STATE.N;
+    const row = Math.floor(selected / N);
+    const col = selected % N;
+    const chainIdx = STATE.cellChain[selected];
+    for (let i = 0; i < N * N; i++) {
+      if (i === selected) continue;
+      const r = Math.floor(i / N);
+      const c = i % N;
+      const sameRow = r === row;
+      const sameCol = c === col;
+      const sameChain = STATE.cellChain[i] === chainIdx;
+      if (sameRow || sameCol || sameChain) {
+        if (STATE.notes[i].has(v)) {
+          STATE.notes[i].delete(v);
+          renderNotes(i);
+        }
+      }
+    }
+  }
+
   // Check for conflict and blink if wrong
   const combined = STATE.userGrid.map((val, i) => val || STATE.givens[i]);
   if (v > 0 && findConflicts(combined).has(selected)) {
@@ -200,7 +221,7 @@ function enterValue(v) {
 
   // Refresh error styling
   circleEl(selected).classList.remove('error');
-  if (STATE.checking) validateBoard(true);
+  validateBoard(true);
 
   checkWin();
 }
@@ -216,7 +237,7 @@ function undoMove() {
   if (prevNotes !== undefined) { STATE.notes[idx] = prevNotes; renderNotes(idx); }
   const circ = circleEl(idx);
   if (circ) circ.classList.remove('error');
-  if (STATE.checking) validateBoard(true);
+  validateBoard(true);
   $status.textContent = '';
   checkWin();
 }
@@ -274,9 +295,15 @@ function validateBoard(silent) {
 
   for (let i = 0; i < N * N; i++) {
     const c = circleEl(i);
+    const t = textEl(i);
     if (!c) continue;
-    if (bad.has(i)) c.classList.add('error');
-    else            c.classList.remove('error');
+    if (bad.has(i)) {
+      c.classList.add('error');
+      if (t) t.classList.add('error');
+    } else {
+      c.classList.remove('error');
+      if (t) t.classList.remove('error');
+    }
   }
 
   if (!silent) {
@@ -567,7 +594,6 @@ function applyPuzzle(N, puzzle) {
     cellChain: Array.isArray(puzzle.cellChain) ? puzzle.cellChain : Array.from(puzzle.cellChain),
     userGrid:  new Array(N * N).fill(0),
     selected:  -1,
-    checking:  false,
     history:   [],
     notes:     Array.from({ length: N * N }, () => new Set()),
     notesMode: false,
@@ -588,7 +614,6 @@ function startNewPuzzle(N, difficulty) {
   $winOverlay.classList.add('hidden');
   $status.textContent = '';
   $status.style.color = '';
-  STATE.checking = false;
 
   // Terminate any previous worker still running
   if (_activeWorker) { _activeWorker.terminate(); _activeWorker = null; }
@@ -683,7 +708,7 @@ document.getElementById('dark-mode-btn').addEventListener('click', () => {
   // Rebuild board so SVG colours update via CSS
   buildBoard();
   renderUserValues();
-  if (STATE.checking) validateBoard(true);
+  validateBoard(true);
 });
 
 document.getElementById('help-btn').addEventListener('click', () =>
@@ -702,15 +727,12 @@ document.getElementById('color-chains-btn').addEventListener('click', () => {
   document.getElementById('color-chains-btn').classList.toggle('active', STATE.colorChains);
   buildBoard();
   renderUserValues();
-  if (STATE.checking) validateBoard(true);
+  validateBoard(true);
 });
 
 document.getElementById('print-btn').addEventListener('click', printPuzzle);
 
-document.getElementById('check-btn').addEventListener('click', () => {
-  STATE.checking = true;
-  validateBoard(false);
-});
+
 
 /* ─── Bootstrap ──────────────────────────────────────────────────────────── */
 startNewPuzzle(4, 'medium');

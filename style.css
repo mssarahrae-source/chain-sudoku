@@ -186,6 +186,15 @@ button:active { transform: scale(0.96); }
   fill: #FFE600;  /* given cells keep their colour even when flagged */
 }
 
+.cell-text.error {
+  fill: #c41e1e;
+  font-weight: 900;
+}
+
+body.dark-mode .cell-text.error {
+  fill: #ff5050;
+}
+
 .cell-circle.win-flash {
   fill: #a8f0b0;
   transition: fill 0.15s ease;
@@ -289,21 +298,15 @@ body.dark-mode .cell-circle.blink {
   padding: 10px 0 0 0;
 }
 
-#print-btn,
-#check-btn {
+#print-btn {
   background: #5cb85c;
   color: #fff;
   border: none;
 }
-#print-btn:hover,
-#check-btn:hover { background: #4cae4c; }
+#print-btn:hover { background: #4cae4c; }
 
-body.dark-mode #print-btn,
-body.dark-mode #check-btn {
-  background: #2a6e2a;
-}
-body.dark-mode #print-btn:hover,
-body.dark-mode #check-btn:hover { background: #3a7e3a; }
+body.dark-mode #print-btn { background: #2a6e2a; }
+body.dark-mode #print-btn:hover { background: #3a7e3a; }
 
 #numpad-row {
   display: flex;
