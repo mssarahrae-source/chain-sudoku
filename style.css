@@ -337,11 +337,11 @@ body.dark-mode .cell-circle.blink {
 }
 #notes-btn:hover { background: #ddd; }
 #notes-btn.active {
-  background: #5c9e6e;
+  background: #4a7fc1;
   color: #fff;
-  border-color: #4a8a5c;
+  border-color: #3a6aa8;
 }
-#notes-btn.active:hover { background: #4a8a5c; }
+#notes-btn.active:hover { background: #3a6aa8; }
 
 #clear-btn {
   background: #eee;
@@ -681,10 +681,10 @@ body.dark-mode #undo-btn:hover,
 body.dark-mode #clear-btn:hover { background: #444; }
 
 body.dark-mode #notes-btn.active {
-  background: #2a6e3e;
-  border-color: #3a8e4e;
+  background: #4a7fc1;
+  border-color: #3a6aa8;
 }
-body.dark-mode body.dark-mode body.dark-mode body.dark-mode body.dark-mode #dark-mode-btn {
+body.dark-mode #dark-mode-btn {
   background: #4a7fc1;
   color: #fff;
   border-color: #3a6aa8;

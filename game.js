@@ -903,8 +903,7 @@ document.getElementById('share-btn').addEventListener('click', sharePuzzle);
 document.getElementById('sound-btn').addEventListener('click', () => {
   STATE.soundEnabled = !STATE.soundEnabled;
   const btn = document.getElementById('sound-btn');
-  btn.classList.toggle('active', STATE.soundEnabled);
-  btn.textContent = STATE.soundEnabled ? '🔊 Sound' : '🔇 Muted';
+  btn.textContent = STATE.soundEnabled ? '\uD83D\uDD0A Sound ON' : '\uD83D\uDD07 Sound OFF';
 });
 
 
