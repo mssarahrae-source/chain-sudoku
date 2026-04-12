@@ -600,6 +600,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape')                                  { deselect();    return; }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z')           { e.preventDefault(); undoMove(); return; }
   if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey) { document.getElementById('notes-btn').click(); return; }
+  if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey) { giveHint(); return; }
 
   // Arrow-key navigation
   if (selected === -1) return;
