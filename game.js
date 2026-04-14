@@ -360,6 +360,49 @@ function validateBoard(silent) {
   }
 }
 
+/* ─── Check solution ─────────────────────────────────────────────────────── */
+function checkSolution() {
+  const { N, solution, givens, userGrid } = STATE;
+  if (!solution) return;
+  const combined = userGrid.map((v, i) => v || givens[i]);
+  const conflicts = findConflicts(combined);
+
+  // Wrong: filled but doesn't match solution (and not already flagged as conflict)
+  const wrong = new Set();
+  for (let i = 0; i < N * N; i++) {
+    if (userGrid[i] && userGrid[i] !== solution[i]) wrong.add(i);
+  }
+
+  // Apply visual feedback
+  for (let i = 0; i < N * N; i++) {
+    const c = circleEl(i);
+    const t = textEl(i);
+    if (!c) continue;
+    if (conflicts.has(i) || wrong.has(i)) {
+      c.classList.add('error');
+      if (t) t.classList.add('error');
+    } else {
+      c.classList.remove('error');
+      if (t) t.classList.remove('error');
+    }
+  }
+
+  const total = conflicts.size + wrong.size;
+  if (total === 0) {
+    const filled = combined.filter(Boolean).length;
+    const remaining = N * N - filled;
+    $status.textContent = remaining === 0
+      ? '\u2714 Everything looks correct!'
+      : `\u2714 No mistakes so far \u2014 ${remaining} cell${remaining > 1 ? 's' : ''} left.`;
+    $status.style.color = '#2c7a2c';
+    SOUNDS.enter();
+  } else {
+    $status.textContent = `\u274C ${total} mistake${total > 1 ? 's' : ''} found \u2014 errors highlighted in red.`;
+    $status.style.color = '#c0392b';
+    SOUNDS.error();
+  }
+}
+
 /* ─── Win detection ──────────────────────────────────────────���───────────── */
 function checkWin() {
   const { N, solution, givens, userGrid } = STATE;
@@ -764,8 +807,6 @@ function giveHint() {
     HINT_STATE.level = 2;
     const btn = document.getElementById('hint-btn');
     if (btn) btn.textContent = '\uD83D\uDCA1 Hint';
-    const txt = textEl(HINT_STATE.cellIdx);
-    if (txt) { txt.textContent = HINT_STATE.value; txt.classList.add('hint-text'); }
     return;
   }
 
@@ -801,7 +842,7 @@ function giveHint() {
       const usedVals = [];
       for (let v = 1; v <= N; v++) if (used & (1 << v)) usedVals.push(v);
       const expl = `\uD83D\uDCA1 Row ${r}, Col ${c} must be ${cands[0]} \u2014 all other values (${usedVals.join(', ')}) are already used in its row, column, or chain.`;
-      startHintLevel1(i, cands[0], `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Hint again for the full explanation.`, expl);
+      startHintLevel1(i, cands[0], `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Explain for the full explanation.`, expl);
       return;
     }
   }
@@ -819,7 +860,7 @@ function giveHint() {
         const i = possible[0];
         const r = Math.floor(i / N) + 1, c = (i % N) + 1;
         const expl = `\uD83D\uDCA1 Row ${r}, Col ${c} must be ${v} \u2014 it\'s the only cell in ${name} where ${v} can go.`;
-        startHintLevel1(i, v, `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Hint again for the full explanation.`, expl);
+        startHintLevel1(i, v, `\uD83D\uDCA1 A deduction is possible in Row ${r}, Col ${c} \u2014 press Explain for the full explanation.`, expl);
         return;
       }
     }
@@ -909,6 +950,7 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
   startNewPuzzle(STATE.N, $diffSelect.value);
 });
 
+document.getElementById('check-btn').addEventListener('click', checkSolution);
 document.getElementById('clear-btn').addEventListener('click', clearCell);
 document.getElementById('undo-btn').addEventListener('click', undoMove);
 

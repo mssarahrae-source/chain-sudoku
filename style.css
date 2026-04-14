@@ -325,15 +325,28 @@ body.dark-mode .cell-circle.blink {
 .num-btn:active { background: #d0e2f7; }
 
 /* ── Action row ───────────────────────────────────────────────────────── */
-#action-row {
+#action-row-1,
+#action-row-2,
+#action-row-3 {
   display: flex;
   gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-#action-row-2 {
-  display: flex;
-  gap: 12px;
+#check-btn {
+  background: #5cb85c;
+  color: #fff;
+  border: 2px solid #4cae4c;
 }
+#check-btn:hover { background: #4cae4c; }
+body.dark-mode #check-btn {
+  background: #2a6e2a;
+  color: #e0e0e0;
+  border-color: #3a7e3a;
+}
+body.dark-mode #check-btn:hover { background: #3a7e3a; }
+
 
 #undo-btn {
   background: #eee;
