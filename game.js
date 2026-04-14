@@ -958,6 +958,7 @@ document.getElementById('notes-btn').addEventListener('click', () => {
   STATE.notesMode = !STATE.notesMode;
   document.getElementById('notes-btn').classList.toggle('active', STATE.notesMode);
   $status.textContent = STATE.notesMode ? 'Notes mode — type to add or remove candidates.' : '';
+  $status.style.color = STATE.notesMode ? '#4a7fc1' : '';
 });
 
 document.getElementById('dark-mode-btn').addEventListener('click', () => {

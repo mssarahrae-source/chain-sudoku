@@ -187,13 +187,9 @@ button:active { transform: scale(0.96); }
 }
 
 .cell-text.error {
-  fill: #c41e1e;
-  font-weight: 900;
+  /* no fill change — circle color shows the error, text stays readable */
 }
 
-body.dark-mode .cell-text.error {
-  fill: #ff5050;
-}
 
 
 /* Hint flash */
@@ -243,9 +239,9 @@ body.dark-mode .cell-circle.hint-highlight {
   background: #e0e0e0;
 }
 #sound-btn.active {
-  background: #4a7fc1;
-  color: #fff;
-  border-color: #3a6aa8;
+  background: #eee;
+  color: #333;
+  border-color: #bbb;
 }
 body.dark-mode #hint-btn,
 body.dark-mode #share-btn,
@@ -260,9 +256,9 @@ body.dark-mode #sound-btn:hover {
   background: #3a3a5a;
 }
 body.dark-mode #sound-btn.active {
-  background: #4a7fc1;
-  color: #fff;
-  border-color: #3a6aa8;
+  background: #2a2a4a;
+  color: #e0e0e0;
+  border-color: #4a4a6a;
 }
 
 .cell-circle.win-flash {
@@ -404,9 +400,9 @@ body.dark-mode #print-btn:hover { background: #3a7e3a; }
   height: 44px;
   font-size: 1.2rem;
   font-weight: 700;
-  background: #e8f0fb;
-  color: #2a4a8a;
-  border: 2px solid #a0b8e0;
+  background: #fff;
+  color: #222;
+  border: 2px solid #bbb;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
@@ -598,7 +594,6 @@ body.dark-mode .cell-circle.error {
 body.dark-mode .cell-circle.given.error {
   fill: #DED790;
 }
-body.dark-mode 
 /* Hint flash */
 .cell-circle.hint-flash {
   fill: #e8f5e9;
@@ -634,9 +629,9 @@ body.dark-mode .cell-text.hint-text {
   background: #e0e0e0;
 }
 #sound-btn.active {
-  background: #4a7fc1;
-  color: #fff;
-  border-color: #3a6aa8;
+  background: #eee;
+  color: #333;
+  border-color: #bbb;
 }
 body.dark-mode #hint-btn,
 body.dark-mode #share-btn,
@@ -651,9 +646,9 @@ body.dark-mode #sound-btn:hover {
   background: #3a3a5a;
 }
 body.dark-mode #sound-btn.active {
-  background: #4a7fc1;
-  color: #fff;
-  border-color: #3a6aa8;
+  background: #2a2a4a;
+  color: #e0e0e0;
+  border-color: #4a4a6a;
 }
 
 .cell-circle.win-flash {
